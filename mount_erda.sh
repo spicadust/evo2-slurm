@@ -1,8 +1,8 @@
 #!/bin/bash
 key=~/.ssh/erda.ed25519
 user=nxw782@alumni.ku.dk
-erdadir=llm_matrix
-mnt=/mnt/llm_matrix
+erdadir=/
+mnt=~/erda
 if [ -f "$key" ]
 then
     mkdir -p ${mnt}

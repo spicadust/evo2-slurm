@@ -6,24 +6,17 @@ build-backend = "hatchling.build"
 name = "evo2-slurm"
 version = "0.1.0"
 requires-python = ">=3.12, <3.13"
-dependencies = [
-  "evo2",
-  "bio>=1.7.1",
-  "tqdm",
-  "numpy",
-  "pandas",
-  "torch",
-  "click",
-]
+dependencies = ["numpy", "pandas", "click>=8.0.0", "tqdm", "bio"]
+
+[project.scripts]
+# Script to generate embeddings
+generate-embedding = "evo2_slurm.embedding:generate"
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [dependency-groups]
-dev = ["ruff"]
+dev = ["ruff>=0.1.1"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/evo2_slurm"]
-
-[tool.uv.sources]
-evo2 = { path = "evo2" }

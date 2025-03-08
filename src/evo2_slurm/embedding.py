@@ -1,4 +1,4 @@
-import argparse
+import click
 import os
 
 import torch
@@ -8,39 +8,55 @@ from tqdm import tqdm
 from evo2 import Evo2
 
 
-def main():
-    # Set up argument parser
-    parser = argparse.ArgumentParser(
-        description="Generate embeddings from sequences using Evo2 model"
-    )
-    parser.add_argument("--input", type=str, required=True, help="Path to input FASTA file")
-    parser.add_argument(
-        "--output_dir", type=str, required=True, help="Directory to save output files"
-    )
-    parser.add_argument("--model_name", type=str, default="evo2_1b_base", help="Evo2 model name")
-    parser.add_argument(
-        "--layer_name",
-        type=str,
-        default="blocks.24.mlp.l3",
-        help="Layer to extract embeddings from",
-    )
-    parser.add_argument("--prefix", type=str, default="evo2", help="Prefix for output files")
-    parser.add_argument(
-        "--batch_size", type=int, default=1, help="Number of sequences to process at once"
-    )
-
-    args = parser.parse_args()
-
+@click.command()
+@click.option(
+    "--input",
+    type=str,
+    required=True,
+    help="Path to input FASTA file",
+)
+@click.option(
+    "--output_dir",
+    type=str,
+    required=True,
+    help="Directory to save output files",
+)
+@click.option(
+    "--model_name",
+    type=str,
+    default="evo2_1b_base",
+    help="Evo2 model name",
+)
+@click.option(
+    "--layer_name",
+    type=str,
+    default="blocks.24.mlp.l3",
+    help="Layer to extract embeddings from",
+)
+@click.option(
+    "--prefix",
+    type=str,
+    default="evo2",
+    help="Prefix for output files",
+)
+@click.option(
+    "--batch_size",
+    type=int,
+    default=1,
+    help="Number of sequences to process at once",
+)
+def generate(input, output_dir, model_name, layer_name, prefix, batch_size):
+    """Generate embeddings from sequences using Evo2 model"""
     # Create output directory if it doesn't exist
-    os.makedirs(args.output_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
 
     # Load model
-    print(f"Loading {args.model_name} model...")
-    evo2_model = Evo2(args.model_name)
+    print(f"Loading {model_name} model...")
+    evo2_model = Evo2(model_name)
 
     # Load sequences
-    print(f"Loading sequences from {args.input}...")
-    sequences = list(SeqIO.parse(args.input, "fasta"))
+    print(f"Loading sequences from {input}...")
+    sequences = list(SeqIO.parse(input, "fasta"))
     print(f"Loaded {len(sequences)} sequences")
 
     # Process all sequences in the FASTA file and extract embeddings
@@ -53,7 +69,7 @@ def main():
     print("Generating embeddings...")
 
     # If batch size is 1, process sequences one by one
-    if args.batch_size == 1:
+    if batch_size == 1:
         for record in tqdm(sequences):
             try:
                 # Extract sequence and header
@@ -76,11 +92,11 @@ def main():
                 # Get embeddings with explicit dtype to avoid BFloat16 issues
                 with torch.amp.autocast("cuda", enabled=False):
                     outputs, embeddings = evo2_model(
-                        input_ids, return_embeddings=True, layer_names=[args.layer_name]
+                        input_ids, return_embeddings=True, layer_names=[layer_name]
                     )
 
                 # Extract the embeddings tensor and ensure it's float32
-                embedding_tensor = embeddings[args.layer_name].to(torch.float32)
+                embedding_tensor = embeddings[layer_name].to(torch.float32)
 
                 # Average over the sequence length dimension to get a 1920-dim vector
                 # Shape goes from [1, n, 1920] to [1, 1920] to [1920]
@@ -101,8 +117,8 @@ def main():
                 continue
     else:
         # Process sequences in batches
-        for i in tqdm(range(0, len(sequences), args.batch_size)):
-            batch = sequences[i : i + args.batch_size]
+        for i in tqdm(range(0, len(sequences), batch_size)):
+            batch = sequences[i : i + batch_size]
             try:
                 # Extract sequences and headers
                 batch_sequences = [str(record.seq) for record in batch]
@@ -125,11 +141,11 @@ def main():
                 # Get embeddings with explicit dtype to avoid BFloat16 issues
                 with torch.amp.autocast("cuda", enabled=False):
                     outputs, embeddings = evo2_model(
-                        input_ids, return_embeddings=True, layer_names=[args.layer_name]
+                        input_ids, return_embeddings=True, layer_names=[layer_name]
                     )
 
                 # Extract the embeddings tensor and ensure it's float32
-                embedding_tensor = embeddings[args.layer_name].to(torch.float32)
+                embedding_tensor = embeddings[layer_name].to(torch.float32)
 
                 # Average over the sequence length dimension to get 1920-dim vectors
                 # Shape goes from [batch_size, n, 1920] to [batch_size, 1920]

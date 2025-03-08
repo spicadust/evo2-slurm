@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=evo2_embedding
-# Select the node to run on
-#SBATCH --nodelist=hendrixgpu02fl
-# We expect that our program should not run longer than 4 hours
+#SBATCH -p gpu
+#SBATCH --cpus-per-task=8
+# We expect that our program should not run longer than 2 days
 # Note that a program will be killed once it exceeds this time!
-#SBATCH --time=4:00:00
+#SBATCH --time=2-00:00:00
 
 ./mount_erda.sh
 ./setup_env.sh

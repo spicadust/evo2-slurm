@@ -17,12 +17,12 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # 2. Create uv virtual environment
 echo "Installing dependencies..."
 uv venv
-uv pip install .
+uv pip install --system .
 
 # 3. Move to evo2 directory and install package
 echo "Installing evo2 package..."
 cd ./evo2
-uv pip install .
+uv pip install --system .
 
 # Return to original directory
 cd ../

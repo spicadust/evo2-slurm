@@ -23,10 +23,7 @@ echo "Installing evo2 package..."
 cd ./evo2
 uv pip install .
 
-cd vortex
-make setup-full
-
 # Return to original directory
-cd ../../
+cd ../
 
 echo "Setup complete!"

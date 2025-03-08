@@ -13,4 +13,4 @@
 # From here on, we can start our program
 
 source setup_env.sh
-uv run generate-embedding generate-embedding --input dataset/1Jan2025_genomes.fa --output_dir ./out/
+uv run generate-embedding generate-embedding --input ~/erda/llm_matrix/1Jan2025_genomes.fa --output_dir ./out/

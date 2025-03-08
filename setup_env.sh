@@ -6,6 +6,7 @@ set -e
 echo "Setting up environment..."
 
 # 0. Load modules
+module load cuda/12.5
 module load cudnn/9.7.1.26_cuda12
 module load gcc/13.2.0
 

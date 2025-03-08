@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "evo2-slurm"
 version = "0.1.0"
 requires-python = ">=3.12, <3.13"
-dependencies = ["numpy", "pandas", "click>=8.0.0", "tqdm", "bio"]
+dependencies = ["torch", "numpy", "pandas", "click>=8.0.0", "tqdm", "bio"]
 
 [project.scripts]
 # Script to generate embeddings

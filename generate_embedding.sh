@@ -12,5 +12,7 @@
 #Skipping many options! see man sbatch
 # From here on, we can start our program
 
-source setup_env.sh
-uv run generate-embedding generate-embedding --input ~/erda/llm_matrix/1Jan2025_genomes.fa --output_dir ./out/
+./mount_erda.sh
+./setup_env.sh
+uv run generate-embedding generate-embedding --input ~/erda/llm_matrix/1Jan2025_genomes.fa --output_dir ~/erda/embeddings/evo2/
+./unmount_erda.sh

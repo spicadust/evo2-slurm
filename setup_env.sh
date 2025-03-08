@@ -19,7 +19,7 @@ echo "Installing dependencies..."
 
 uv venv
 
-uv pip install numpy torch==2.6.0 ninja
+uv pip install numpy torch==2.6.0 ninja psutil
 
 export CC=gcc
 export CXX=g++

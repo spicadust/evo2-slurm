@@ -1,2 +1,2 @@
 #!/bin/bash
-fusermount -u ~/erda
+fusermount -u /mnt/llm_matrix

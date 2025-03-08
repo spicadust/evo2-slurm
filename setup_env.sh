@@ -16,15 +16,25 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 2. Create uv virtual environment
 echo "Installing dependencies..."
+
 uv venv
-uv pip install --system .
 
-# 3. Move to evo2 directory and install package
-echo "Installing evo2 package..."
-cd ./evo2
-uv pip install --system .
+uv pip install numpy torch==2.6.0 ninja
 
-# Return to original directory
-cd ../
+uv pip install transformer-engine[pytorch] --no-build-isolation
 
-echo "Setup complete!"
+uv pip install flash-attn --no-build-isolation
+
+cd evo2
+
+uv pip install .
+
+cd vortex
+
+uv pip install -e .
+
+cd ../../
+
+uv pip install .
+
+echo "Environment setup complete!"

@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "evo2-slurm"
+version = "0.1.0"
+requires-python = ">=3.12, <3.13"
+dependencies = [
+  "evo2",
+  "bio>=1.7.1",
+  "tqdm",
+  "numpy",
+  "pandas",
+  "torch",
+  "click",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[dependency-groups]
+dev = ["ruff"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/evo2_slurm"]
+
+[tool.uv.sources]
+evo2 = { path = "evo2" }

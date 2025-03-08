@@ -1,7 +1,7 @@
 #!/bin/bash
 #The partition is the queue you want to run on. standard is gpu and can be ommitted.
 #SBATCH -p gpu
-#SBATCH --job-name=MyJob
+#SBATCH --job-name=evo2_embedding
 #number of independent tasks we are going to start in this script
 #SBATCH --ntasks=1
 #number of cpus we want to allocate for each program

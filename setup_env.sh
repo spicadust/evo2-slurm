@@ -34,8 +34,10 @@ echo "Installing dependencies..."
 
 uv venv
 
+# 3. Install build dependencies
 uv pip install ninja cmake pybind11 numpy psutil
 
+# 4. Install evo2 and vortex
 cd evo2
 
 uv pip install .
@@ -44,14 +46,18 @@ cd vortex
 
 uv pip install -e .
 
+# 5. Install transformer-engine
+cd ../../
+
 uv pip install -v transformer-engine[pytorch] --no-build-isolation
 
-cd vortex/ops/attn
+# 6. Install flash-attention
+cd flash-attention
 
-export MAX_JOBS=32
-uv pip install -v -e . --no-build-isolation
+uv run setup.py install
 
-cd ../../../../../
+# 7. Install root project
+cd ..
 
 uv pip install .
 

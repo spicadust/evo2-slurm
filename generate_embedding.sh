@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=evo2_embedding
 #SBATCH -p gpu --gres=gpu:a100:2
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=32
 # We expect that our program should not run longer than 2 days
 # Note that a program will be killed once it exceeds this time!
 #SBATCH --time=2-00:00:00

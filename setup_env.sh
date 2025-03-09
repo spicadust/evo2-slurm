@@ -54,10 +54,12 @@ uv pip install -v transformer-engine[pytorch] --no-build-isolation
 # 6. Install flash-attention
 cd flash-attention
 
-uv run setup.py install
+# uv run setup.py install
 
 # 7. Install root project
 cd ..
+
+uv pip install -v flash-attn --no-build-isolation
 
 uv pip install .
 

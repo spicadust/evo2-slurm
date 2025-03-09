@@ -22,6 +22,11 @@ export LD_LIBRARY_PATH="$HOME/lib64:$LD_LIBRARY_PATH"
 # Also keep LD_PRELOAD just in case
 export LD_PRELOAD="/opt/software/gcc/13.2.0/lib64/libstdc++.so.6"
 
+# Add local GLIBC to paths
+export LD_LIBRARY_PATH=$HOME/glibc/install/lib:$LD_LIBRARY_PATH
+export LIBRARY_PATH=$HOME/glibc/install/lib:$LIBRARY_PATH
+export CPATH=$HOME/glibc/install/include:$CPATH
+
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 echo "LD_PRELOAD: $LD_PRELOAD"
 

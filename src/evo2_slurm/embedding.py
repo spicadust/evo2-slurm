@@ -1,10 +1,10 @@
 import click
 import os
-
+import numpy as np
 import torch
 from Bio import SeqIO
 from tqdm import tqdm
-
+from datetime import datetime
 from evo2 import Evo2
 
 
@@ -47,8 +47,22 @@ from evo2 import Evo2
 )
 def generate(input, output_dir, model_name, layer_name, prefix, batch_size):
     """Generate embeddings from sequences using Evo2 model"""
+    # Create a unique subfolder for the run
+    output_dir = os.path.join(output_dir, f"{prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
+
+    # Create output directory for batch files
+    batch_dir = os.path.join(output_dir, f"{prefix}_batches")
+    os.makedirs(batch_dir, exist_ok=True)
+    
+    # Initialize files
+    headers_path = os.path.join(output_dir, f"{prefix}_headers.npy")
+    failed_path = os.path.join(output_dir, f"{prefix}_failed.txt")
+    final_embeddings_path = os.path.join(output_dir, f"{prefix}_embeddings.npy")
+
+    # Create list to store all headers
+    all_headers = []
 
     # Load model
     print(f"Loading {model_name} model...")
@@ -59,18 +73,12 @@ def generate(input, output_dir, model_name, layer_name, prefix, batch_size):
     sequences = list(SeqIO.parse(input, "fasta"))
     print(f"Loaded {len(sequences)} sequences")
 
-    # Process all sequences in the FASTA file and extract embeddings
-
-    # Create lists to store results and failed sequences
-    results = []
-    failed_sequences = []
-
     # Process sequences in batches
     print("Generating embeddings...")
 
     # If batch size is 1, process sequences one by one
     if batch_size == 1:
-        for record in tqdm(sequences):
+        for idx, record in enumerate(tqdm(sequences)):
             try:
                 # Extract sequence and header
                 sequence = str(record.seq)
@@ -102,22 +110,25 @@ def generate(input, output_dir, model_name, layer_name, prefix, batch_size):
                 # Shape goes from [1, n, 1920] to [1, 1920] to [1920]
                 avg_embedding = embedding_tensor.mean(dim=1).squeeze().cpu().numpy()
 
-                # Store results
-                results.append({"header": header, "embedding": avg_embedding})
+                # Save results
+                batch_embeddings_path = os.path.join(batch_dir, f"batch_{idx:06d}.npy")
+                np.save(batch_embeddings_path, avg_embedding)
+                
+                # Store header
+                all_headers.append(header)
 
                 # Clear GPU cache to free memory
                 torch.cuda.empty_cache()
 
             except Exception as e:
                 print(f"Error processing sequence {header}: {e}")
-                # Record the failed sequence
-                failed_sequences.append(header)
-                # Force GPU memory cleanup
+                with open(failed_path, 'a') as f:
+                    f.write(f"{header}\n")
                 torch.cuda.empty_cache()
                 continue
     else:
         # Process sequences in batches
-        for i in tqdm(range(0, len(sequences), batch_size)):
+        for batch_idx, i in enumerate(tqdm(range(0, len(sequences), batch_size))):
             batch = sequences[i : i + batch_size]
             try:
                 # Extract sequences and headers
@@ -151,17 +162,49 @@ def generate(input, output_dir, model_name, layer_name, prefix, batch_size):
                 # Shape goes from [batch_size, n, 1920] to [batch_size, 1920]
                 avg_embeddings = embedding_tensor.mean(dim=1).cpu().numpy()
 
-                # Store results
-                for header, embedding in zip(batch_headers, avg_embeddings):
-                    results.append({"header": header, "embedding": embedding})
+                # Save results
+                batch_embeddings_path = os.path.join(batch_dir, f"batch_{batch_idx:06d}.npy")
+                np.save(batch_embeddings_path, avg_embeddings)
+                
+                # Store headers
+                all_headers.extend(batch_headers)
 
                 # Clear GPU cache to free memory
                 torch.cuda.empty_cache()
 
             except Exception as e:
                 print(f"Error processing batch starting at sequence {i}: {e}")
-                # Record the failed sequences
-                failed_sequences.extend(batch_headers)
-                # Force GPU memory cleanup
+                with open(failed_path, 'a') as f:
+                    for header in batch_headers:
+                        f.write(f"{header}\n")
                 torch.cuda.empty_cache()
                 continue
+
+    # Save headers at the end
+    if all_headers:
+        np.save(headers_path, np.array(all_headers))
+
+    # Combine all batch files into final embeddings file
+    print("Combining batch files into final embeddings file...")
+    batch_files = sorted(os.listdir(batch_dir))
+    if batch_files:
+        embeddings_list = []
+        for batch_file in tqdm(batch_files):
+            batch_path = os.path.join(batch_dir, batch_file)
+            embeddings_list.append(np.load(batch_path))
+        final_embeddings = np.vstack(embeddings_list)
+        np.save(final_embeddings_path, final_embeddings)
+        
+        # Optionally, remove batch directory after successful combination
+        import shutil
+        shutil.rmtree(batch_dir)
+        
+        print(f"Final results saved to:")
+        print(f"- Embeddings: {final_embeddings_path}")
+        print(f"- Headers: {headers_path}")
+        if os.path.exists(failed_path):
+            print(f"- Failed sequences: {failed_path}")
+
+
+if __name__ == "__main__":
+    generate()

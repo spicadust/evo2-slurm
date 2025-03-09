@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=evo2_embedding
-#SBATCH -p gpu --gres=gpu:a100:2
+#SBATCH -p gpu --gres=gpu:h100:1
 #SBATCH --cpus-per-task=32
 # We expect that our program should not run longer than 2 days
 # Note that a program will be killed once it exceeds this time!
@@ -11,5 +11,5 @@ export LD_PRELOAD="/opt/software/gcc/13.2.0/lib64/libstdc++.so.6"
 
 ./mount_erda.sh
 ./setup_env.sh
-uv run generate-embedding --input ~/erda/llm_matrix/millard_phage_Jan2025.fa --output_dir ~/erda/embeddings/evo2/
+uv run generate-embedding --input ~/erda/llm_matrix/millard_phage_Jan2025.fa --output_dir ~/erda/embeddings/ --batch_size 8
 ./unmount_erda.sh

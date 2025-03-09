@@ -16,9 +16,7 @@ module load cuda/12.5
 module load cudnn/9.7.1.26_cuda12
 module load gcc/13.2.0
 
-# Verify we're using the correct library
-ldd $(which python3) | grep libstdc++
-strings /opt/software/gcc/13.2.0/lib64/libstdc++.so.6 | grep GLIBCXX_3.4.29
+echo $LD_LIBRARY_PATH
 
 # 1. Install uv
 echo "Installing uv..."

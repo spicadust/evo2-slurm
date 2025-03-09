@@ -11,8 +11,5 @@ export LD_PRELOAD="/opt/software/gcc/13.2.0/lib64/libstdc++.so.6"
 
 ./mount_erda.sh
 ./setup_env.sh
-export LD_LIBRARY_PATH=$HOME/glibc/install/lib:$LD_LIBRARY_PATH
-export LIBRARY_PATH=$HOME/glibc/install/lib:$LIBRARY_PATH
-export CPATH=$HOME/glibc/install/include:$CPATH
 uv run generate-embedding generate-embedding --input ~/erda/llm_matrix/1Jan2025_genomes.fa --output_dir ~/erda/embeddings/evo2/
 ./unmount_erda.sh

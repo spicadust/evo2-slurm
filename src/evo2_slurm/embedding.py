@@ -24,13 +24,13 @@ from evo2 import Evo2
 @click.option(
     "--model_name",
     type=str,
-    default="evo2_1b_base",
+    default="evo2_7b",
     help="Evo2 model name",
 )
 @click.option(
     "--layer_name",
     type=str,
-    default="blocks.24.mlp.l3",
+    default="blocks.28.mlp.l3",
     help="Layer to extract embeddings from",
 )
 @click.option(

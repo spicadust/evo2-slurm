@@ -34,10 +34,12 @@ echo "Installing dependencies..."
 
 uv venv
 
-# 3. Install build dependencies
-uv pip install ninja cmake pybind11 numpy psutil
+uv pip install numpy torch==2.6.0 ninja psutil wheel setuptools pybind11 cmake
 
-# 4. Install evo2 and vortex
+uv pip install -v transformer-engine[pytorch] --no-build-isolation
+
+uv pip install -v https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.0.6/flash_attn-2.7.4.post1+cu124torch2.6-cp312-cp312-linux_x86_64.whl --no-build-isolation
+
 cd evo2
 
 uv pip install .
@@ -46,20 +48,7 @@ cd vortex
 
 uv pip install -e .
 
-# 5. Install transformer-engine
 cd ../../
-
-uv pip install -v transformer-engine[pytorch] --no-build-isolation
-
-# 6. Install flash-attention
-cd flash-attention
-
-# uv run setup.py install
-
-# 7. Install root project
-cd ..
-
-uv pip install -v flash-attn --no-build-isolation
 
 uv pip install .
 

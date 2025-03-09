@@ -6,10 +6,19 @@ set -e
 echo "Setting up environment..."
 
 # 0. Load modules
-export LD_LIBRARY_PATH="/opt/software/gcc/13.2.0/lib64:$LD_LIBRARY_PATH"
+
+# Clear and set LD_LIBRARY_PATH to ensure we use the correct library
+unset LD_LIBRARY_PATH
+export LD_LIBRARY_PATH="/opt/software/gcc/13.2.0/lib64:/opt/software/gcc/13.2.0/lib"
+
+# Now load modules (which will append to our LD_LIBRARY_PATH)
 module load cuda/12.5
 module load cudnn/9.7.1.26_cuda12
 module load gcc/13.2.0
+
+# Verify we're using the correct library
+ldd $(which python3) | grep libstdc++
+strings /opt/software/gcc/13.2.0/lib64/libstdc++.so.6 | grep GLIBCXX_3.4.29
 
 # 1. Install uv
 echo "Installing uv..."

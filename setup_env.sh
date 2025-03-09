@@ -34,9 +34,7 @@ echo "Installing dependencies..."
 
 uv venv
 
-uv pip install numpy torch==2.6.0 ninja psutil wheel setuptools pybind11 cmake
-
-uv pip install -v transformer-engine[pytorch] --no-build-isolation
+uv pip install ninja cmake pybind11 numpy psutil
 
 cd evo2
 
@@ -46,10 +44,12 @@ cd vortex
 
 uv pip install -e .
 
+uv pip install -v transformer-engine[pytorch] --no-build-isolation
+
 cd vortex/ops/attn
 
 export MAX_JOBS=32
-uv pip install -v . --no-build-isolation
+uv pip install -v -e . --no-build-isolation
 
 cd ../../../../../
 

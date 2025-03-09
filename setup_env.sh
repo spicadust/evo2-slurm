@@ -38,9 +38,6 @@ uv pip install numpy torch==2.6.0 ninja psutil wheel setuptools pybind11 cmake
 
 uv pip install -v transformer-engine[pytorch] --no-build-isolation
 
-# export FLASH_ATTENTION_FORCE_BUILD=1
-# uv pip install -v flash-attn==2.6.3 --no-build-isolation
-
 cd evo2
 
 uv pip install .
@@ -49,7 +46,12 @@ cd vortex
 
 uv pip install -e .
 
-cd ../../
+cd vortex/ops/attn
+
+export MAX_JOBS=32
+uv pip install -v . --no-build-isolation
+
+cd ../../../../../
 
 uv pip install .
 

@@ -10,8 +10,21 @@ module load gcc/13.2.0
 module load cuda/12.5
 module load cudnn/9.7.1.26_cuda12
 
-# Create a lib directory in your home if it doesn't exist
+# Create directories
 mkdir -p ~/lib64
+mkdir -p ~/glibc/build
+mkdir -p ~/glibc/install
+
+# Download and extract GLIBC 2.32
+cd ~/glibc
+wget https://ftp.gnu.org/gnu/glibc/glibc-2.32.tar.gz
+tar xf glibc-2.32.tar.gz
+
+# Build and install GLIBC
+cd build
+../glibc-2.32/configure --prefix=$HOME/glibc/install
+make -j$(nproc)
+make install
 
 # Create a symbolic link to the newer libstdc++
 ln -sf /opt/software/gcc/13.2.0/lib64/libstdc++.so.6 ~/lib64/libstdc++.so.6
@@ -21,6 +34,11 @@ export LD_LIBRARY_PATH="$HOME/lib64:$LD_LIBRARY_PATH"
 
 # Also keep LD_PRELOAD just in case
 export LD_PRELOAD="/opt/software/gcc/13.2.0/lib64/libstdc++.so.6"
+
+# Add local GLIBC to paths
+export LD_LIBRARY_PATH=$HOME/glibc/install/lib:$LD_LIBRARY_PATH
+export LIBRARY_PATH=$HOME/glibc/install/lib:$LIBRARY_PATH
+export CPATH=$HOME/glibc/install/include:$CPATH
 
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 echo "LD_PRELOAD: $LD_PRELOAD"
@@ -38,7 +56,7 @@ uv pip install numpy torch==2.6.0 ninja psutil wheel setuptools pybind11 cmake
 
 uv pip install -v transformer-engine[pytorch] --no-build-isolation
 
-uv pip install -v https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.0.6/flash_attn-2.4.3+cu124torch2.6-cp312-cp312-linux_x86_64.whl --no-build-isolation
+uv pip install -v https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.0.6/flash_attn-2.7.4.post1+cu124torch2.6-cp312-cp312-linux_x86_64.whl --no-build-isolation
 
 cd evo2
 

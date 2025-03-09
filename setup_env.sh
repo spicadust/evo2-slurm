@@ -10,7 +10,16 @@ module load gcc/13.2.0
 module load cuda/12.5
 module load cudnn/9.7.1.26_cuda12
 
-# Force use of the newer libstdc++
+# Create a lib directory in your home if it doesn't exist
+mkdir -p ~/lib64
+
+# Create a symbolic link to the newer libstdc++
+ln -sf /opt/software/gcc/13.2.0/lib64/libstdc++.so.6 ~/lib64/libstdc++.so.6
+
+# Add your local lib directory to the front of LD_LIBRARY_PATH
+export LD_LIBRARY_PATH="$HOME/lib64:$LD_LIBRARY_PATH"
+
+# Also keep LD_PRELOAD just in case
 export LD_PRELOAD="/opt/software/gcc/13.2.0/lib64/libstdc++.so.6"
 
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"

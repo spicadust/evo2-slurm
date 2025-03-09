@@ -11,5 +11,5 @@ export LD_PRELOAD="/opt/software/gcc/13.2.0/lib64/libstdc++.so.6"
 
 ./mount_erda.sh
 ./setup_env.sh
-uv run generate-embedding --input ~/erda/llm_matrix/1Jan2025_genomes.fa --output_dir ~/erda/embeddings/evo2/
+uv run generate-embedding --input ~/erda/llm_matrix/millard_phage_Jan2025.fa --output_dir ~/erda/embeddings/evo2/
 ./unmount_erda.sh

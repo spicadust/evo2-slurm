@@ -6,17 +6,15 @@ set -e
 echo "Setting up environment..."
 
 # 0. Load modules
-
-# Clear and set LD_LIBRARY_PATH to ensure we use the correct library
-unset LD_LIBRARY_PATH
-export LD_LIBRARY_PATH="/opt/software/gcc/13.2.0/lib64:/opt/software/gcc/13.2.0/lib"
-
-# Now load modules (which will append to our LD_LIBRARY_PATH)
+module load gcc/13.2.0
 module load cuda/12.5
 module load cudnn/9.7.1.26_cuda12
-module load gcc/13.2.0
 
-echo $LD_LIBRARY_PATH
+# Force use of the newer libstdc++
+export LD_PRELOAD="/opt/software/gcc/13.2.0/lib64/libstdc++.so.6"
+
+echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+echo "LD_PRELOAD: $LD_PRELOAD"
 
 # 1. Install uv
 echo "Installing uv..."

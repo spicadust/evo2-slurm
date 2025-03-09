@@ -40,7 +40,7 @@ export LD_LIBRARY_PATH="${CUDA_RUNTIME_PATH}/lib:${LD_LIBRARY_PATH:-}"
 
 uv pip install -v transformer-engine[pytorch] --no-build-isolation
 
-uv pip install flash-attn --find-links https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.0.6/flash_attn-2.7.4.post1+cu124torch2.6-cp312-cp312-linux_x86_64.whl
+uv pip install flash-attn --find-links https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.0.6/flash_attn-2.7.4.post1+cu124torch2.6-cp312-cp312-linux_x86_64.whl --no-build-isolation
 
 cd evo2
 

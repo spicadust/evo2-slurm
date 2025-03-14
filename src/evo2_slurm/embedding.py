@@ -6,6 +6,7 @@ from Bio import SeqIO
 from tqdm import tqdm
 from datetime import datetime
 from evo2 import Evo2
+from operator import itemgetter
 
 
 @click.command()
@@ -48,14 +49,16 @@ from evo2 import Evo2
 def generate(input, output_dir, model_name, layer_name, prefix, batch_size):
     """Generate embeddings from sequences using Evo2 model"""
     # Create a unique subfolder for the run
-    output_dir = os.path.join(output_dir, f"{prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    output_dir = os.path.join(
+        output_dir, f"{prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    )
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
     # Create output directory for batch files
     batch_dir = os.path.join(output_dir, f"{prefix}_batches")
     os.makedirs(batch_dir, exist_ok=True)
-    
+
     # Initialize files
     headers_path = os.path.join(output_dir, f"{prefix}_headers.npy")
     failed_path = os.path.join(output_dir, f"{prefix}_failed.txt")
@@ -97,11 +100,10 @@ def generate(input, output_dir, model_name, layer_name, prefix, batch_size):
                     .to("cuda:0")
                 )
 
-                # Get embeddings with explicit dtype to avoid BFloat16 issues
-                with torch.amp.autocast("cuda", enabled=False):
-                    outputs, embeddings = evo2_model(
-                        input_ids, return_embeddings=True, layer_names=[layer_name]
-                    )
+                # Get embeddings
+                outputs, embeddings = evo2_model(
+                    input_ids, return_embeddings=True, layer_names=[layer_name]
+                )
 
                 # Extract the embeddings tensor and ensure it's float32
                 embedding_tensor = embeddings[layer_name].to(torch.float32)
@@ -113,7 +115,7 @@ def generate(input, output_dir, model_name, layer_name, prefix, batch_size):
                 # Save results
                 batch_embeddings_path = os.path.join(batch_dir, f"batch_{idx:06d}.npy")
                 np.save(batch_embeddings_path, avg_embedding)
-                
+
                 # Store header
                 all_headers.append(header)
 
@@ -122,50 +124,68 @@ def generate(input, output_dir, model_name, layer_name, prefix, batch_size):
 
             except Exception as e:
                 print(f"Error processing sequence {header}: {e}")
-                with open(failed_path, 'a') as f:
+                with open(failed_path, "a") as f:
                     f.write(f"{header}\n")
                 torch.cuda.empty_cache()
                 continue
     else:
-        # Process sequences in batches
-        for batch_idx, i in enumerate(tqdm(range(0, len(sequences), batch_size))):
-            batch = sequences[i : i + batch_size]
+        # First, group sequences by length to minimize padding
+        sequence_info = []
+        for idx, record in enumerate(sequences):
+            sequence = str(record.seq)
+            tokens = evo2_model.tokenizer.tokenize(sequence)
+            sequence_info.append((idx, record, len(tokens)))
+
+        # Sort by sequence length
+        sequence_info.sort(key=itemgetter(2))
+
+        # Process in batches of similar length
+        for batch_start in tqdm(range(0, len(sequence_info), batch_size)):
+            batch_info = sequence_info[batch_start : batch_start + batch_size]
             try:
                 # Extract sequences and headers
-                batch_sequences = [str(record.seq) for record in batch]
-                batch_headers = [record.description for record in batch]
+                batch_indices = [info[0] for info in batch_info]
+                batch_records = [info[1] for info in batch_info]
+                batch_sequences = [str(record.seq) for record in batch_records]
+                batch_headers = [record.description for record in batch_records]
 
                 # Make sure GPU memory is cleared before processing
                 torch.cuda.empty_cache()
 
-                # Tokenize and get embeddings
-                input_ids = torch.stack(
-                    [
+                # Process each sequence individually and stack results
+                embeddings_list = []
+                for sequence in batch_sequences:
+                    # Tokenize
+                    input_ids = (
                         torch.tensor(
-                            evo2_model.tokenizer.tokenize(seq),
+                            evo2_model.tokenizer.tokenize(sequence),
                             dtype=torch.int,
-                        ).to("cuda:0")
-                        for seq in batch_sequences
-                    ]
-                )
+                        )
+                        .unsqueeze(0)
+                        .to("cuda:0")
+                    )
 
-                # Get embeddings with explicit dtype to avoid BFloat16 issues
-                with torch.amp.autocast("cuda", enabled=False):
+                    # Get embeddings
                     outputs, embeddings = evo2_model(
                         input_ids, return_embeddings=True, layer_names=[layer_name]
                     )
 
-                # Extract the embeddings tensor and ensure it's float32
-                embedding_tensor = embeddings[layer_name].to(torch.float32)
+                    # Extract the embeddings tensor and ensure it's float32
+                    embedding_tensor = embeddings[layer_name].to(torch.float32)
 
-                # Average over the sequence length dimension to get 1920-dim vectors
-                # Shape goes from [batch_size, n, 1920] to [batch_size, 1920]
-                avg_embeddings = embedding_tensor.mean(dim=1).cpu().numpy()
+                    # Average over the sequence length dimension
+                    avg_embedding = embedding_tensor.mean(dim=1).squeeze().cpu().numpy()
+                    embeddings_list.append(avg_embedding)
+
+                # Stack all embeddings in this batch
+                batch_embeddings = np.stack(embeddings_list)
 
                 # Save results
-                batch_embeddings_path = os.path.join(batch_dir, f"batch_{batch_idx:06d}.npy")
-                np.save(batch_embeddings_path, avg_embeddings)
-                
+                batch_embeddings_path = os.path.join(
+                    batch_dir, f"batch_{batch_start//batch_size:06d}.npy"
+                )
+                np.save(batch_embeddings_path, batch_embeddings)
+
                 # Store headers
                 all_headers.extend(batch_headers)
 
@@ -173,8 +193,8 @@ def generate(input, output_dir, model_name, layer_name, prefix, batch_size):
                 torch.cuda.empty_cache()
 
             except Exception as e:
-                print(f"Error processing batch starting at sequence {i}: {e}")
-                with open(failed_path, 'a') as f:
+                print(f"Error processing batch starting at sequence {batch_start}: {e}")
+                with open(failed_path, "a") as f:
                     for header in batch_headers:
                         f.write(f"{header}\n")
                 torch.cuda.empty_cache()
@@ -194,12 +214,13 @@ def generate(input, output_dir, model_name, layer_name, prefix, batch_size):
             embeddings_list.append(np.load(batch_path))
         final_embeddings = np.vstack(embeddings_list)
         np.save(final_embeddings_path, final_embeddings)
-        
+
         # Optionally, remove batch directory after successful combination
         import shutil
+
         shutil.rmtree(batch_dir)
-        
-        print(f"Final results saved to:")
+
+        print("Final results saved to:")
         print(f"- Embeddings: {final_embeddings_path}")
         print(f"- Headers: {headers_path}")
         if os.path.exists(failed_path):

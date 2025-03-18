@@ -11,5 +11,5 @@ export LD_PRELOAD="/opt/software/gcc/13.2.0/lib64/libstdc++.so.6"
 
 ./mount_erda.sh
 ./setup_env.sh
-uv run generate-embedding --input ~/erda/llm_matrix/millard_phage_Jan2025_cleaned.fa --output_dir ~/erda/embeddings/ --batch_size 4 --model_name evo2_40b --layer_name blocks.44.mlp.l3
+uv run generate-embedding --input ~/erda/llm_matrix/millard_phage_Jan2025_cleaned.fa --output_dir ~/erda/embeddings/ --batch_size 2 --model_name evo2_40b --layer_name blocks.44.mlp.l3
 ./unmount_erda.sh

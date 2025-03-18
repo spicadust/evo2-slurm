@@ -11,5 +11,5 @@ export LD_PRELOAD="/opt/software/gcc/13.2.0/lib64/libstdc++.so.6"
 
 ./mount_erda.sh
 ./setup_env.sh
-uv run generate-embedding --input ~/erda/CCRP/MATRIX/Analyses/Microbiomics/Ref_Genomics/phages/vOTUs_MATRIX_01_2024.fasta --output_dir ~/erda/embeddings_matrix/ --batch_size 8
+uv run generate-embedding --input ~/erda/CCRP/MATRIX/Analyses/Microbiomics/Ref_Genomics/phages/vOTUs_MATRIX_01_2024.fasta --output_dir ~/erda/embeddings_matrix/ --batch_size 4 --model_name evo2_40b --layer_name blocks.44.mlp.l3
 ./unmount_erda.sh
